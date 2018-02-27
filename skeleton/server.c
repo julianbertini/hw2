@@ -183,6 +183,34 @@ int handle_client_encrypt(int client_socket) {
 }
 
 int handle_client_decrypt(int client_socket) {
+
+	// Where is (c) socket created
+	// Create (c) socket here, to listen to the E node
+
+
+	// Create (d) socket to talk to proxy
+
+	int *proxy_socket;
+	//Send CONNECT request to connect to the proxy server
+	// CONNECT tiles.services.mozilla.com:443 HTTP/1.1 ???
+	proxy_socket = create_client(destination_host, destination_port);
+
+
+	// 2. https handshake protocol
+	init_openssl_library();
+	tls_context = get_tls_context_nocert();
+	SSL *remote_ssl = tls_session_passive(client_socket, tls_context);
+
+	forward_connection(client_socket, remote_ssl, proxy_socket);
+
+	SSL_shutdown(remote_ssl);
+	SSL_free(remote_ssl);
+
+
+
+	// close sockets a and b... call get peer info function??
+
+	return 1;
 }
 
 int forward_connection(int protected_socket, SSL *protected_ssl, int unprotected_socket) {
