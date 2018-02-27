@@ -193,4 +193,6 @@ int create_client(char *destination, char *port) {
 
 		return -1;
 	}
+
+	return result;
 }

@@ -311,6 +311,7 @@ int forward_connection(int protected_socket, SSL *protected_ssl, int unprotected
 	}
 
 	return 1;
+
 }
 
 void print_address_information(char *template, struct sockaddr *address, int address_size) {
