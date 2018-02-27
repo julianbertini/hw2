@@ -196,9 +196,10 @@ int handle_client_decrypt(int client_socket) {
 	proxy_socket = create_client(destination_host, destination_port);
 
 
+
 	// 2. https handshake protocol
-	init_openssl_library();
-	tls_context = get_tls_context_nocert();
+//	init_openssl_library();
+//	tls_context = get_tls_context_nocert();
 	SSL *remote_ssl = tls_session_passive(client_socket, tls_context);
 
 	forward_connection(client_socket, remote_ssl, proxy_socket);
