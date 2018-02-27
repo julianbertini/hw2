@@ -184,8 +184,6 @@ int handle_client_encrypt(int client_socket) {
 	// Create (d) socket to talk to proxy
 
 	int *decrypt_socket;
-	//Send CONNECT request to connect to the proxy server
-	// CONNECT tiles.services.mozilla.com:443 HTTP/1.1 ???
 	decrypt_socket = create_client(destination_host, destination_port);
 
 	if (decrypt_socket == -1){
@@ -250,6 +248,69 @@ int handle_client_decrypt(int client_socket) {
 }
 
 int forward_connection(int protected_socket, SSL *protected_ssl, int unprotected_socket) {
+
+	int result;
+	char buffer[BUFFER_SIZE];
+
+	fd_set descriptor_set;
+
+	while(1) {
+		FD_ZERO(&descriptor_set);
+
+		FD_SET(protected_socket, &descriptor_set);
+		FD_SET(unprotected_socket, &descriptor_set);
+
+		result = select(MAX(protected_socket,unprotected_socket) + 1, &descriptor_set, NULL, NULL, 0);
+
+		if(result == -1) {
+			perror("select");
+			continue;
+		}
+
+		// protected_socket is ready for reading
+		if(FD_ISSET(protected_socket, &descriptor_set)) {
+			int nread = 0;
+			int ntowrite = 0;
+			while((nread = SSL_read(protected_socket, buffer, BUFFER_SIZE-1)) > 0){
+				if(nread < 0){
+					perror("read");
+
+					return 0;
+				}
+				ntowrite += nread;
+			}
+			result = flush_buffer(unprotected_socket, buffer,ntowrite);
+
+			if(result == -1){
+				perror("flush_buffer");
+				return 0;
+			}
+
+		}
+
+		// There's something ready coming from the server
+		if(FD_ISSET(unprotected_socket, &descriptor_set)) {
+			int nread = 0;
+			int ntowrite = 0;
+			while((nread = read(unprotected_socket, buffer, BUFFER_SIZE-1)) > 0){
+				if(nread < 0){
+					perror("read");
+
+					return 0;
+				}
+				ntowrite += nread;
+			}
+
+			result = flush_buffer_ssl(protected_socket, buffer,ntowrite);
+
+			if(result == -1){
+				perror("flush_buffer");
+				return 0;
+			}
+		}
+	}
+
+	return 1;
 }
 
 void print_address_information(char *template, struct sockaddr *address, int address_size) {
