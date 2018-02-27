@@ -180,36 +180,71 @@ int main(int argc, char **argv) {
 }
 
 int handle_client_encrypt(int client_socket) {
+	int result;
+	// Create (d) socket to talk to proxy
+
+	int *decrypt_socket;
+	//Send CONNECT request to connect to the proxy server
+	// CONNECT tiles.services.mozilla.com:443 HTTP/1.1 ???
+	decrypt_socket = create_client(destination_host, destination_port);
+
+	if (decrypt_socket == -1){
+		perror("Error creating decrypt (D) socket");
+		return 0;
+	}
+
+	// 2. https handshake protocol
+	SSL *remote_ssl = tls_session_active(decrypt_socket, tls_context);
+
+	result = forward_connection(decrypt_socket, remote_ssl, client_socket);
+
+	if (result == 0){
+			perror("Error forwarding the connection");
+			return 0;
+	}
+
+	// finish ssl stream and session cleanly
+	SSL_shutdown(remote_ssl);
+	SSL_free(remote_ssl);
+
+	// close client and server sockets
+	close(client_socket);
+	close(decrypt_socket);
+
+	return 1;
 }
 
 int handle_client_decrypt(int client_socket) {
 
-	// Where is (c) socket created
-	// Create (c) socket here, to listen to the E node
-
+	int result;
+	int *proxy_socket;
 
 	// Create (d) socket to talk to proxy
-
-	int *proxy_socket;
-	//Send CONNECT request to connect to the proxy server
-	// CONNECT tiles.services.mozilla.com:443 HTTP/1.1 ???
 	proxy_socket = create_client(destination_host, destination_port);
 
+	if (proxy_socket == -1){
+		perror("Error creating proxy socket");
+		return 0;
+	}
 
-
-	// 2. https handshake protocol
-//	init_openssl_library();
-//	tls_context = get_tls_context_nocert();
+	// 2. https handshake protocol, waiting for E packets
 	SSL *remote_ssl = tls_session_passive(client_socket, tls_context);
 
-	forward_connection(client_socket, remote_ssl, proxy_socket);
+	// forward packets to the proxy server
+	result = forward_connection(client_socket, remote_ssl, proxy_socket);
 
+	if (result == 0){
+		perror("Error forwarding the connection");
+		return 0;
+	}
+
+	// finish ssl stream and session cleanly
 	SSL_shutdown(remote_ssl);
 	SSL_free(remote_ssl);
 
-
-
-	// close sockets a and b... call get peer info function??
+	// close client and server sockets
+	close(client_socket);
+	close(proxy_socket);
 
 	return 1;
 }
