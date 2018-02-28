@@ -196,6 +196,15 @@ int handle_client_encrypt(int client_socket) {
 	int result;
 	// Create (d) socket to talk to proxy
 
+	char *cert_file="pki_files/ca_certificate.pem";
+
+	result = SSL_CTX_load_verify_locations(tls_context,cert_file,NULL);
+
+	if (result == 0) {
+		perror("Not able to find certificate file verification locations");
+		return 0;
+	}
+
 	int decrypt_socket;
 	decrypt_socket = create_client(destination_host, destination_port);
 
@@ -206,6 +215,17 @@ int handle_client_encrypt(int client_socket) {
 
 	// 2. https handshake protocol
 	SSL *remote_ssl = tls_session_active(decrypt_socket, tls_context);
+
+	if((SSL_get_peer_certificate(remote_ssl)) == NULL){
+		perror("No certificate present");
+		return 0;
+	}
+
+	if((SSL_get_verify_result(remote_ssl)) < 0){
+		perror("peer not verified");
+		return 0;
+
+	}
 
 	result = forward_connection(decrypt_socket, remote_ssl, client_socket);
 
