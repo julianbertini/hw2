@@ -1,4 +1,5 @@
 /*
+ /*
  * Copyright (c) 2018, Hammurabi Mendes.
  * License: BSD 2-clause
  */
@@ -194,5 +195,5 @@ int create_client(char *destination, char *port) {
 		return -1;
 	}
 
-	return result;
+	return remote_socket;
 }
