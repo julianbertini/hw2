@@ -72,6 +72,7 @@ SSL *tls_session_active(int socket, SSL_CTX *context) {
 
 int get_serv_certificate_password(char *buffer, int size, int rwflag, void *userdata) {
 	fputs("Type server's certificate private key password: ", stdout);
+	char *pass = "123456";
 	fgets(buffer, size, stdin);
 
 	int last_character_position = strlen(buffer) - 1;

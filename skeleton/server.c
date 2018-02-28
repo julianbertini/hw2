@@ -44,27 +44,39 @@ int main(int argc, char **argv) {
 
 	// Argument parsing
 
-	if(argc < 4) {
-		fprintf(stderr, "Usage: server [E|D] <local_port> <proxy_host> <proxy_port>\n");
+//	if(argc < 4) {
+//		fprintf(stderr, "Usage: server [E|D] <local_port> <proxy_host> <proxy_port>\n");
+//
+//		return -1;
+//	}
+//
+//	if(strcmp(argv[1], "E") == 0) {
+//		mode = MODE_E;
+//	}
+//	else if(strcmp(argv[1], "D") == 0) {
+//		mode = MODE_D;
+//	}
+//	else {
+//		fprintf(stderr, "Usage: server [E|D] <local_port> <proxy_host> <proxy_port>\n");
+//
+//		return -1;
+//	}
 
-		return -1;
-	}
 
-	if(strcmp(argv[1], "E") == 0) {
-		mode = MODE_E;
-	}
-	else if(strcmp(argv[1], "D") == 0) {
-		mode = MODE_D;
-	}
-	else {
-		fprintf(stderr, "Usage: server [E|D] <local_port> <proxy_host> <proxy_port>\n");
 
-		return -1;
-	}
+	char *lport = "9000";
+	char *dest_host = "localhost";
+	char *dest_port = "8000";
 
-	local_port = argv[2];
-	destination_host = argv[3];
-	destination_port = argv[4];
+	local_port = lport;//argv[2];
+	destination_host = dest_host;//argv[3];
+	destination_port = dest_port;//argv[4];
+
+	mode = MODE_D;
+
+//	local_port = argv[2];
+//	destination_host = argv[3];
+//	destination_port = argv[4];
 
 	// Using getaddrinfo to obtain the first address to bind to
 
@@ -99,6 +111,7 @@ int main(int argc, char **argv) {
 		}
 
 		// Binding to a local address/port
+
 
 		result = bind(listen_socket, result_curr->ai_addr, result_curr->ai_addrlen);
 
@@ -147,6 +160,7 @@ int main(int argc, char **argv) {
 
 		if(client_socket == -1) {
 			perror("Cannot accept client");
+
 
 			return -1;
 		}
@@ -216,6 +230,8 @@ int handle_client_decrypt(int client_socket) {
 
 	int result;
 	int *proxy_socket;
+
+	printf("Starting decrypt...");
 
 	// Create (d) socket to talk to proxy
 	proxy_socket = create_client(destination_host, destination_port);
